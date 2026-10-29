@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+logoFile="transtable_overhaul.png"
+credits="ProjectE by sinkillerj and contributors. Layout inspired by Applied Energistics 2 terminals."
+description='''
+Replaces the ProjectE Transmutation Table / Tablet screen with a scrollable, searchable, sortable terminal in the style of Applied Energistics 2.
+'''
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="projecte"
+    type="required"
+    versionRange="${projecte_version_range}"
+    ordering="AFTER"
+    side="BOTH"
