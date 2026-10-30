@@ -8,6 +8,7 @@ import java.util.Optional;
 import moze_intel.projecte.gameObjs.container.TransmutationContainer;
 import moze_intel.projecte.api.proxy.IEMCProxy;
 import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -44,6 +45,8 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     public static final int BUTTON_PREFER_TABLE = 0;
     public static final int BUTTON_PREFER_INVENTORY = 1;
     public static final int BUTTON_CLEAR_GRID = 2;
+    /** Plus the index in {@link #matchingRecipes}: use that recipe when several match the grid. */
+    public static final int BUTTON_SELECT_RECIPE = 100;
     public static final int GRID_SIZE = 9;
 
     private final ContainerLevelAccess access;
@@ -61,6 +64,9 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private boolean lastAffordable = true;
     @Nullable
     private RecipeHolder<CraftingRecipe> lastRecipe;
+    /** Recipe the player picked when several match; used whenever it matches the grid. */
+    @Nullable
+    private ResourceLocation selectedRecipe;
 
     public TransmutationCraftingMenu(int windowId, Inventory playerInv) {
         this(windowId, playerInv, ContainerLevelAccess.NULL);
@@ -149,10 +155,25 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     }
 
     /**
-     * Client side check whether the grid currently forms a recipe, for showing the EMC cost.
+     * Every recipe the grid matches, in a stable order (the same on client and server).
      */
-    public boolean hasRecipe(Level level) {
-        return level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, craftSlots.asCraftInput(), level).isPresent();
+    public List<RecipeHolder<CraftingRecipe>> matchingRecipes(Level level) {
+        return level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, craftSlots.asCraftInput(), level);
+    }
+
+    public CraftingInput craftInput() {
+        return craftSlots.asCraftInput();
+    }
+
+    private Optional<RecipeHolder<CraftingRecipe>> findRecipe(Level level, CraftingInput input) {
+        if (selectedRecipe != null) {
+            for (RecipeHolder<CraftingRecipe> recipe : level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, input, level)) {
+                if (recipe.id().equals(selectedRecipe)) {
+                    return Optional.of(recipe);
+                }
+            }
+        }
+        return level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level, lastRecipe);
     }
 
     /**
@@ -218,8 +239,12 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private void consumeIngredients(Player player) {
         CraftingInput.Positioned positioned = craftSlots.asPositionedCraftInput();
         CraftingInput input = positioned.input();
+        Level level = player.level();
         CommonHooks.setCraftingPlayer(player);
-        NonNullList<ItemStack> remaining = player.level().getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, input, player.level());
+        // The picked recipe decides the leftovers too, not just the first one that matches
+        NonNullList<ItemStack> remaining = lastRecipe != null && lastRecipe.value().matches(input, level)
+                ? lastRecipe.value().getRemainingItems(input)
+                : level.getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, input, level);
         CommonHooks.setCraftingPlayer(null);
 
         BigInteger cost = BigInteger.ZERO;
@@ -288,7 +313,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
             CraftingInput input = craftSlots.asCraftInput();
             ItemStack result = ItemStack.EMPTY;
             lastAffordable = canAffordPlaceholders();
-            Optional<RecipeHolder<CraftingRecipe>> recipe = level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level, lastRecipe);
+            Optional<RecipeHolder<CraftingRecipe>> recipe = findRecipe(level, input);
             if (recipe.isPresent() && player instanceof ServerPlayer serverPlayer && resultSlots.setRecipeUsed(level, serverPlayer, recipe.get())
                     && lastAffordable) {
                 lastRecipe = recipe.get();
@@ -619,7 +644,18 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
                 }
             }
             default -> {
-                return false;
+                if (id < BUTTON_SELECT_RECIPE) {
+                    return false;
+                }
+                if (!player.level().isClientSide) {
+                    List<RecipeHolder<CraftingRecipe>> recipes = matchingRecipes(player.level());
+                    int index = id - BUTTON_SELECT_RECIPE;
+                    if (index >= recipes.size()) {
+                        return false;
+                    }
+                    selectedRecipe = recipes.get(index).id();
+                    updateResult();
+                }
             }
         }
         return true;

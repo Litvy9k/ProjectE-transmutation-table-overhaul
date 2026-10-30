@@ -14,6 +14,8 @@
   "gui.transtable_overhaul.crafting.placeholder.desc": "点击移除，拿着物品点击可替换",
   "gui.transtable_overhaul.crafting.from_inventory": "来自背包",
   "gui.transtable_overhaul.crafting.missing": "缺少材料",
+  "gui.transtable_overhaul.crafting.recipes": "切换配方",
+  "gui.transtable_overhaul.crafting.recipes.desc": "有多个配方匹配当前合成格，选择要合成的产物。",
 
   "gui.transtable_overhaul.search": "搜索",
   "gui.transtable_overhaul.search.hint": "搜索...",

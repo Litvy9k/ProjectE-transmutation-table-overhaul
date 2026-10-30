@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - Minecraft 1.21.1 (NeoForge)
+
+- Transmutation Crafting Table: recipe switch button next to the result when several recipes match the grid
+  (like Polymorph); the picked recipe is remembered while the grid still matches it
+
 ## 1.1.0 - Minecraft 1.21.1 (NeoForge)
 
 - New block: **Transmutation Crafting Table** (Transmutation Table on top of Dark Matter), an AE2 crafting terminal style

@@ -14,6 +14,8 @@
   "gui.transtable_overhaul.crafting.placeholder.desc": "Click to remove, click with an item to replace",
   "gui.transtable_overhaul.crafting.from_inventory": "From your inventory",
   "gui.transtable_overhaul.crafting.missing": "Missing ingredients",
+  "gui.transtable_overhaul.crafting.recipes": "Switch Recipe",
+  "gui.transtable_overhaul.crafting.recipes.desc": "Several recipes match the grid, pick which result to craft.",
 
   "gui.transtable_overhaul.search": "Search",
   "gui.transtable_overhaul.search.hint": "Search...",

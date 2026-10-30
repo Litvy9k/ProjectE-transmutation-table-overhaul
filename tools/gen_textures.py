@@ -321,6 +321,26 @@ def icon_source(img, x, y, inventory):
     marker(img, x, y, inventory)
 
 
+CYCLE_ARROWS = [
+    "....#####...",
+    "..##.....#..",
+    ".#........#.",
+    ".#......#####",
+    "#........###.",
+    "#.........#..",
+    "..#.........#",
+    ".###........#",
+    "#####......#.",
+    ".#........#.",
+    "..#.....##..",
+    "...#####....",
+]
+
+
+def icon_recipes(img, x, y):
+    draw_mask(img, x + 2, y + 2, CYCLE_ARROWS, {"#": ICON})
+
+
 MARKER_GEM = [
     ".#####.",
     "#hoooo#",
@@ -475,9 +495,10 @@ def build():
     icon_clear(img, 192, iy)
     icon_source(img, 208, iy, False)
     icon_source(img, 224, iy, True)
+    icon_recipes(img, 240, iy)
     # Grid slot source markers (7x7)
-    marker(img, 240, 176, False)
-    marker(img, 240, 184, True)
+    marker(img, 56, 160, False)
+    marker(img, 56, 168, True)
 
     crafting_section(img, 0, 192)
     return img

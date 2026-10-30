@@ -29,6 +29,7 @@ Craft it from a Transmutation Table on top of a piece of Dark Matter. It works l
 - **⇄ button**: switch between EMC and your inventory. The grid converts right away: placeholders are swapped for items from your inventory, or inventory items go back and become placeholders. **✕ button**: clear the grid.
 - When the grid forms a recipe, the EMC paid per craft is shown next to the result (red if you can't afford it).
 - Click the result to take it, shift-click to craft one stack. **Taking a crafted item that has an EMC value also learns it**, so it shows up in the terminal right away.
+- When several recipes match the grid, a button next to the result lets you pick which one to craft.
 
 ## Requirements
 
@@ -61,4 +62,5 @@ Install it on **both the client and the server**. Every transmutation is checked
   - 每个有物品的格子都显示宝石（EMC）或箱子（背包）标记。背包材料用完后，如果已学习，会留下 EMC 占位继续合成，和 AE2 合成终端一样。
   - 能组成配方时，合成格旁边显示每次合成消耗的 EMC（不够时显示为红色）。
   - 点击取出产物，Shift + 点击合成一组；取出有 EMC 值的产物时会同时学习它。
+  - 有多个配方匹配时，结果槽旁边会出现切换配方按钮。
 - 需要 ProjectE 1.1.0 及以上版本，**客户端和服务端都要安装**。
