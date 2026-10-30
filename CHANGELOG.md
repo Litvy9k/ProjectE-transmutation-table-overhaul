@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 - Minecraft 1.21.1 (NeoForge)
+
+- New item: **Portable Transmutation Crafting Table** (Transmutation Tablet on top of Dark Matter). Right-click to open
+  the crafting terminal anywhere, like ProjectE's Transmutation Tablet
+
 ## 1.1.1 - Minecraft 1.21.1 (NeoForge)
 
 - Transmutation Crafting Table: recipe switch button next to the result when several recipes match the grid

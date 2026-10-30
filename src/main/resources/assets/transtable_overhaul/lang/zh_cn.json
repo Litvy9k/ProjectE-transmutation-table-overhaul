@@ -1,5 +1,6 @@
 {
   "block.transtable_overhaul.transmutation_crafting_table": "合成转化桌",
+  "item.transtable_overhaul.portable_transmutation_crafting_table": "便携式合成转化桌",
 
   "gui.transtable_overhaul.crafting.clear": "清空合成格",
   "gui.transtable_overhaul.crafting.source": "材料来源",

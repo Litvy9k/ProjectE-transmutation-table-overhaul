@@ -387,9 +387,9 @@ def crafting_section(img, x0, y0):
     img.alpha_composite(tmp.crop((0, top, WIDTH, top + 58)), (x0, y0))
 
 
-def blue_table_top():
-    """ProjectE's table top with the light grey disk tinted light blue."""
-    im = Image.open(Path(__file__).with_name("projecte_transmutation_top.png")).convert("RGBA")
+def blue_tint(source):
+    """A ProjectE transmutation texture with its light grey parts tinted light blue."""
+    im = Image.open(Path(__file__).with_name(source)).convert("RGBA")
     for y in range(im.height):
         for x in range(im.width):
             r, g, b, a = im.getpixel((x, y))
@@ -553,7 +553,10 @@ if __name__ == "__main__":
     print("wrote", OUT)
     block_top = ROOT / "src/main/resources/assets/transtable_overhaul/textures/block/transmutation_crafting_table_top.png"
     block_top.parent.mkdir(parents=True, exist_ok=True)
-    blue_table_top().save(block_top)
+    blue_tint("projecte_transmutation_top.png").save(block_top)
+    portable = ROOT / "src/main/resources/assets/transtable_overhaul/textures/item/portable_transmutation_crafting_table.png"
+    portable.parent.mkdir(parents=True, exist_ok=True)
+    blue_tint("projecte_transmutation_tablet.png").save(portable)
     icon = logo()
     mod_logo = ROOT / "src/main/resources/transtable_overhaul.png"
     icon.resize((128, 128), Image.NEAREST).save(mod_logo)

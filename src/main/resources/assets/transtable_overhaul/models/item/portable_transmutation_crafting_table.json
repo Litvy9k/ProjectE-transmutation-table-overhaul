@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "transtable_overhaul:item/portable_transmutation_crafting_table"
+  }
+}

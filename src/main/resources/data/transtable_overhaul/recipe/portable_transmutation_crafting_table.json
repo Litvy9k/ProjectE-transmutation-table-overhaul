@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "T",
+    "D"
+  ],
+  "key": {
+    "T": {
+      "item": "projecte:transmutation_tablet"
+    },
+    "D": {
+      "item": "projecte:dark_matter"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "transtable_overhaul:portable_transmutation_crafting_table"
+  }
+}

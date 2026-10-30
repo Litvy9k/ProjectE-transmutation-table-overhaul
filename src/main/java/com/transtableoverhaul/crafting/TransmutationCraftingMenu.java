@@ -8,6 +8,8 @@ import java.util.Optional;
 import moze_intel.projecte.gameObjs.container.TransmutationContainer;
 import moze_intel.projecte.api.proxy.IEMCProxy;
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -55,8 +57,8 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private final ResultContainer resultSlots = new ResultContainer();
     /** Bit i set: grid slot i is an EMC placeholder. Synced to the client so it can draw and predict clicks. */
     private final DataSlot placeholders = DataSlot.standalone();
-    private final int gridStart;
-    private final int resultIndex;
+    private int gridStart;
+    private int resultIndex;
     private int playerInventoryStart = Integer.MAX_VALUE;
     private int playerInventoryEnd;
     private boolean preferInventory;
@@ -68,14 +70,45 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     @Nullable
     private ResourceLocation selectedRecipe;
 
-    public TransmutationCraftingMenu(int windowId, Inventory playerInv) {
-        this(windowId, playerInv, ContainerLevelAccess.NULL);
+    public static TransmutationCraftingMenu fromNetwork(int windowId, Inventory playerInv, RegistryFriendlyByteBuf buf) {
+        if (buf.readBoolean()) {
+            return new TransmutationCraftingMenu(windowId, playerInv, buf.readEnum(InteractionHand.class), buf.readByte());
+        }
+        return new TransmutationCraftingMenu(windowId, playerInv, ContainerLevelAccess.NULL);
     }
 
+    /**
+     * Opened from the block.
+     */
     public TransmutationCraftingMenu(int windowId, Inventory playerInv, ContainerLevelAccess access) {
         super(windowId, playerInv);
         this.access = access;
         this.player = playerInv.player;
+        addCraftingSlots(playerInv);
+    }
+
+    /**
+     * Opened from the portable item; ProjectE's hand container locks the held item's slot and closes when it's gone.
+     */
+    public TransmutationCraftingMenu(int windowId, Inventory playerInv, InteractionHand hand, int selected) {
+        super(windowId, playerInv, hand, selected);
+        this.access = ContainerLevelAccess.NULL;
+        this.player = playerInv.player;
+        addCraftingSlots(playerInv);
+    }
+
+    /**
+     * Writes what {@link #fromNetwork} reads.
+     */
+    public static void writeOpenData(RegistryFriendlyByteBuf buf, @Nullable InteractionHand hand, int selected) {
+        buf.writeBoolean(hand != null);
+        if (hand != null) {
+            buf.writeEnum(hand);
+            buf.writeByte(selected);
+        }
+    }
+
+    private void addCraftingSlots(Inventory playerInv) {
         for (Slot slot : slots) {
             if (slot.container == playerInv) {
                 playerInventoryStart = Math.min(playerInventoryStart, slot.index);
@@ -92,6 +125,14 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
         addDataSlot(placeholders);
     }
 
+    /**
+     * The level to do server-only work in, or {@code null} on the client.
+     */
+    @Nullable
+    private Level serverLevel() {
+        return player.level().isClientSide ? null : player.level();
+    }
+
     @NotNull
     @Override
     public MenuType<?> getType() {
@@ -101,7 +142,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        return stillValid(access, player, ModRegistries.CRAFTING_TABLE.get());
+        return hand != null ? super.stillValid(player) : stillValid(access, player, ModRegistries.CRAFTING_TABLE.get());
     }
 
     public boolean isPreferInventory() {
@@ -309,7 +350,8 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
      * can't be paid for.
      */
     private void updateResult() {
-        access.execute((level, pos) -> {
+        Level level = serverLevel();
+        if (level != null) {
             CraftingInput input = craftSlots.asCraftInput();
             ItemStack result = ItemStack.EMPTY;
             lastAffordable = canAffordPlaceholders();
@@ -323,7 +365,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
                 }
             }
             resultSlots.setItem(0, result);
-        });
+        }
     }
 
     @Override
@@ -397,7 +439,10 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private int quickCraftOnce(Player player, Slot slot) {
         ItemStack result = slot.getItem();
         ItemStack original = result.copy();
-        access.execute((level, pos) -> result.getItem().onCraftedBy(result, level, player));
+        Level level = serverLevel();
+        if (level != null) {
+            result.getItem().onCraftedBy(result, level, player);
+        }
         if (!moveItemStackTo(result, playerInventoryStart, playerInventoryEnd, true)) {
             return 0;
         }
@@ -666,7 +711,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     @Override
     public void removed(@NotNull Player player) {
         super.removed(player);
-        access.execute((level, pos) -> {
+        if (!player.level().isClientSide) {
             // Placeholders aren't real items, don't hand them out
             for (int i = 0; i < GRID_SIZE; i++) {
                 if (isPlaceholder(i)) {
@@ -674,6 +719,6 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
                 }
             }
             clearContainer(player, craftSlots);
-        });
+        }
     }
 }

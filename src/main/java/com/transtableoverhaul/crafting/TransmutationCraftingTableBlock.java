@@ -35,7 +35,7 @@ public class TransmutationCraftingTableBlock extends TransmutationStone {
     protected InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
         if (!level.isClientSide) {
             player.openMenu(new SimpleMenuProvider((windowId, inventory, p) -> new TransmutationCraftingMenu(windowId, inventory, ContainerLevelAccess.create(level, pos)),
-                    getName()));
+                    getName()), buf -> TransmutationCraftingMenu.writeOpenData(buf, null, 0));
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

@@ -1,5 +1,6 @@
 {
   "block.transtable_overhaul.transmutation_crafting_table": "Transmutation Crafting Table",
+  "item.transtable_overhaul.portable_transmutation_crafting_table": "Portable Transmutation Crafting Table",
 
   "gui.transtable_overhaul.crafting.clear": "Clear Crafting Grid",
   "gui.transtable_overhaul.crafting.source": "Ingredient Source",

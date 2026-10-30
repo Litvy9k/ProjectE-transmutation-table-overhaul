@@ -49,6 +49,7 @@ public class TerminalJeiPlugin implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(ModRegistries.CRAFTING_TABLE_ITEM.get(), RecipeTypes.CRAFTING);
+        registration.addRecipeCatalyst(ModRegistries.PORTABLE_CRAFTING_TABLE.get(), RecipeTypes.CRAFTING);
     }
 
     private record TerminalHandler<T extends TransmutationTerminalScreen>(IIngredientManager ingredients) implements IGuiContainerHandler<T> {

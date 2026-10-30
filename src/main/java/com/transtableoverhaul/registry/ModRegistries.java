@@ -1,21 +1,23 @@
 package com.transtableoverhaul.registry;
 
 import com.transtableoverhaul.TransTableOverhaul;
+import com.transtableoverhaul.crafting.PortableCraftingTableItem;
 import com.transtableoverhaul.crafting.TransmutationCraftingMenu;
 import com.transtableoverhaul.crafting.TransmutationCraftingTableBlock;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -39,9 +41,11 @@ public final class ModRegistries {
                     .requiresCorrectToolForDrops()
                     .strength(10, 30)));
     public static final DeferredItem<BlockItem> CRAFTING_TABLE_ITEM = ITEMS.registerSimpleBlockItem(CRAFTING_TABLE);
+    public static final DeferredItem<PortableCraftingTableItem> PORTABLE_CRAFTING_TABLE = ITEMS.register("portable_transmutation_crafting_table",
+            () -> new PortableCraftingTableItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredHolder<MenuType<?>, MenuType<TransmutationCraftingMenu>> CRAFTING_MENU = MENUS.register("transmutation_crafting",
-            () -> new MenuType<>(TransmutationCraftingMenu::new, FeatureFlags.VANILLA_SET));
+            () -> IMenuTypeExtension.create(TransmutationCraftingMenu::fromNetwork));
 
     private ModRegistries() {
     }
@@ -57,8 +61,11 @@ public final class ModRegistries {
         if (event.getTabKey().location().equals(PROJECTE_TAB)) {
             ItemStack projecteTable = new ItemStack(BuiltInRegistries.ITEM.get(PROJECTE_TABLE));
             event.insertAfter(projecteTable, CRAFTING_TABLE_ITEM.toStack(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
+            event.insertAfter(CRAFTING_TABLE_ITEM.toStack(), PORTABLE_CRAFTING_TABLE.toStack(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
         } else if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(CRAFTING_TABLE_ITEM);
+        } else if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(PORTABLE_CRAFTING_TABLE);
         }
     }
 }
