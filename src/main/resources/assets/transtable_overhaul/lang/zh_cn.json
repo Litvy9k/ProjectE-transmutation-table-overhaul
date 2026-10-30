@@ -1,4 +1,20 @@
 {
+  "block.transtable_overhaul.transmutation_crafting_table": "合成转化桌",
+
+  "gui.transtable_overhaul.crafting.clear": "清空合成格",
+  "gui.transtable_overhaul.crafting.source": "材料来源",
+  "gui.transtable_overhaul.crafting.source.table": "优先使用已学习物品（EMC）",
+  "gui.transtable_overhaul.crafting.source.inventory": "优先使用背包",
+  "gui.transtable_overhaul.crafting.source.desc": "切换后立即转换合成格中的材料。JEI 转移配方和合成时材料用完也按此来源；第一来源提供不了的由另一边补足。",
+  "gui.transtable_overhaul.crafting.cost": "消耗：%s EMC",
+  "gui.transtable_overhaul.crafting.cost.exact": "每次合成 %s EMC",
+  "gui.transtable_overhaul.crafting.cost.too_high": "EMC 不足",
+  "gui.transtable_overhaul.crafting.cost.desc": "每次合成时，来自已学习物品（宝石标记）的材料所需支付的 EMC。来自背包（箱子标记）的材料会直接消耗实物。",
+  "gui.transtable_overhaul.crafting.placeholder": "来自 EMC：每次合成时扣除 EMC",
+  "gui.transtable_overhaul.crafting.placeholder.desc": "点击移除，拿着物品点击可替换",
+  "gui.transtable_overhaul.crafting.from_inventory": "来自背包",
+  "gui.transtable_overhaul.crafting.missing": "缺少材料",
+
   "gui.transtable_overhaul.search": "搜索",
   "gui.transtable_overhaul.search.hint": "搜索...",
   "gui.transtable_overhaul.emc": "EMC",
@@ -34,7 +50,8 @@
   "gui.transtable_overhaul.slot.klein_star": "克莱因之星",
   "gui.transtable_overhaul.slot.klein_star.desc": "这里的克莱因之星会用你的 EMC 充能，也能像自己的 EMC 一样被消耗。",
 
-  "transtable_overhaul.configuration.title": "转化终端设置",
+  "transtable_overhaul.configuration.title": "TransTable Overhaul 设置",
+  "transtable_overhaul.configuration.craftingPreferInventory": "合成：优先使用背包",
   "transtable_overhaul.configuration.terminal": "终端",
   "transtable_overhaul.configuration.sortOrder": "排序方式",
   "transtable_overhaul.configuration.sortDirection": "排序方向",

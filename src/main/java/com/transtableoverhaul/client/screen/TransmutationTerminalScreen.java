@@ -59,7 +59,8 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
     private static final int COLUMNS = 9;
     private static final int SLOT = 18;
     private static final int HEADER_HEIGHT = 17;
-    private static final int BOTTOM_HEIGHT = 118;
+    private static final int STRIP_HEIGHT = 24;
+    private static final int INVENTORY_HEIGHT = 94;
     private static final int GRID_X = 8;
     private static final int GRID_Y = 18;
     private static final int SCROLLBAR_X = 175;
@@ -75,7 +76,7 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
     private static final int SCREEN_MARGIN = 8;
     private static final int KNOWLEDGE_POLL_TICKS = 20;
     private static final int MESSAGE_FADE_PER_TICK = 4;
-    private static final String LANG = "gui." + TransTableOverhaul.MODID + ".";
+    protected static final String LANG = "gui." + TransTableOverhaul.MODID + ".";
 
     private static String lastSearch = "";
 
@@ -119,13 +120,32 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
         return HEADER_HEIGHT + rows * SLOT;
     }
 
+    /**
+     * Height of an extra section between the EMC strip and the player inventory, for subclasses.
+     */
+    protected int craftingHeight() {
+        return 0;
+    }
+
+    /**
+     * Top of the extra section, relative to {@link #topPos}.
+     */
+    protected int craftingTop() {
+        return stripTop() + STRIP_HEIGHT;
+    }
+
+    private int inventoryTop() {
+        return craftingTop() + craftingHeight();
+    }
+
     @Override
     public void init() {
-        int fittingRows = (height - HEADER_HEIGHT - BOTTOM_HEIGHT - 2 * SCREEN_MARGIN) / SLOT;
+        int fixedHeight = HEADER_HEIGHT + STRIP_HEIGHT + craftingHeight() + INVENTORY_HEIGHT;
+        int fittingRows = (height - fixedHeight - 2 * SCREEN_MARGIN) / SLOT;
         rows = Math.max(MIN_ROWS, Math.min(ClientConfig.TERMINAL_SIZE.get().maxRows, fittingRows));
         imageWidth = WIDTH;
-        imageHeight = HEADER_HEIGHT + rows * SLOT + BOTTOM_HEIGHT;
-        inventoryLabelY = stripTop() + 25;
+        imageHeight = fixedHeight + rows * SLOT;
+        inventoryLabelY = inventoryTop() + 1;
         String search = searchBox != null ? searchBox.getValue() : ClientConfig.REMEMBER_SEARCH.get() ? lastSearch : "";
         if (firstInit && ClientConfig.SYNC_SEARCH.get()) {
             String viewerText = RecipeViewerSync.getSearchText();
@@ -213,13 +233,14 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
 
     private void layoutSlots() {
         int stripTop = stripTop();
+        int inventoryTop = inventoryTop();
         for (Slot slot : menu.slots) {
             if (slot.container instanceof Inventory) {
                 int index = slot.getContainerSlot();
                 if (index < Inventory.getSelectionSize()) {
-                    move(slot, GRID_X + index * SLOT, stripTop + 94);
+                    move(slot, GRID_X + index * SLOT, inventoryTop + 70);
                 } else if (index < Inventory.INVENTORY_SIZE) {
-                    move(slot, GRID_X + (index % COLUMNS) * SLOT, stripTop + 36 + (index / COLUMNS - 1) * SLOT);
+                    move(slot, GRID_X + (index % COLUMNS) * SLOT, inventoryTop + 12 + (index / COLUMNS - 1) * SLOT);
                 }
             } else if (slot instanceof SlotInput) {
                 int index = slot.getSlotIndex();
@@ -235,11 +256,25 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
             } else if (slot instanceof SlotOutput) {
                 // Replaced by the grid
                 move(slot, -10_000, -10_000);
+            } else {
+                layoutExtraSlot(slot);
             }
         }
     }
 
-    private static void move(Slot slot, int x, int y) {
+    /**
+     * Positions slots this screen doesn't know about, for subclasses.
+     */
+    protected void layoutExtraSlot(Slot slot) {
+    }
+
+    /**
+     * Draws the extra section's background, for subclasses.
+     */
+    protected void renderCraftingBackground(GuiGraphics graphics, int x, int y) {
+    }
+
+    protected static void move(Slot slot, int x, int y) {
         slot.x = x;
         slot.y = y;
     }
@@ -427,7 +462,11 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
         for (int row = 0; row < rows; row++) {
             TerminalTexture.blit(graphics, TerminalTexture.ROW, x, y + HEADER_HEIGHT + row * SLOT);
         }
-        TerminalTexture.blit(graphics, TerminalTexture.BOTTOM, x, y + stripTop());
+        TerminalTexture.blit(graphics, TerminalTexture.STRIP, x, y + stripTop());
+        if (craftingHeight() > 0) {
+            renderCraftingBackground(graphics, x, y + craftingTop());
+        }
+        TerminalTexture.blit(graphics, TerminalTexture.INVENTORY, x, y + inventoryTop());
         TerminalTexture.blit(graphics, TerminalTexture.PANEL, x + PANEL_X, y);
 
         int maxScroll = maxScroll();
@@ -492,7 +531,7 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
         graphics.drawString(font, clip(TransmutationEMCFormatter.formatEMC(availableEmc), EMC_BOX_X + EMC_BOX_WIDTH - 3 - valueX), valueX, emcY, 0xFFE070, false);
     }
 
-    private FormattedCharSequence clip(Component text, int width) {
+    protected FormattedCharSequence clip(Component text, int width) {
         return Language.getInstance().getVisualOrder(font.substrByWidth(text, width));
     }
 

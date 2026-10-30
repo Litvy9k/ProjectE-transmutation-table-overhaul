@@ -17,12 +17,16 @@ public final class TerminalTexture {
 
     public static final Sprite HEADER = new Sprite(0, 0, 195, 17);
     public static final Sprite ROW = new Sprite(0, 17, 195, 18);
-    public static final Sprite BOTTOM = new Sprite(0, 35, 195, 118);
+    public static final Sprite STRIP = new Sprite(0, 35, 195, 24);
+    public static final Sprite INVENTORY = new Sprite(0, 59, 195, 94);
+    public static final Sprite CRAFTING = new Sprite(0, 192, 195, 58);
     public static final Sprite PANEL = new Sprite(196, 0, 50, 112);
     public static final Sprite THUMB = new Sprite(0, 160, 12, 15);
     public static final Sprite THUMB_DISABLED = new Sprite(12, 160, 12, 15);
     public static final Sprite BUTTON = new Sprite(24, 160, 16, 16);
     public static final Sprite BUTTON_HOVERED = new Sprite(40, 160, 16, 16);
+    public static final Sprite MARKER_EMC = new Sprite(240, 176, 7, 7);
+    public static final Sprite MARKER_INVENTORY = new Sprite(240, 184, 7, 7);
 
     private static final int ICON_V = 176;
     public static final int ICON_SORT_NAME = 0;
@@ -37,6 +41,9 @@ public final class TerminalTexture {
     public static final int ICON_SIZE_TALL = 9;
     public static final int ICON_SYNC_OFF = 10;
     public static final int ICON_SYNC_ON = 11;
+    public static final int ICON_CLEAR = 12;
+    public static final int ICON_SOURCE_TABLE = 13;
+    public static final int ICON_SOURCE_INVENTORY = 14;
 
     private TerminalTexture() {
     }

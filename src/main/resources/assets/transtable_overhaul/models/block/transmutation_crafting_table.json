@@ -1,0 +1,9 @@
+{
+  "parent": "projecte:block/transmutation_table",
+  "textures": {
+    "bottom": "projecte:block/transmutation_stone/bottom",
+    "particle": "transtable_overhaul:block/transmutation_crafting_table_top",
+    "side": "projecte:block/transmutation_stone/side",
+    "top": "transtable_overhaul:block/transmutation_crafting_table_top"
+  }
+}

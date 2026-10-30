@@ -1,4 +1,20 @@
 {
+  "block.transtable_overhaul.transmutation_crafting_table": "Transmutation Crafting Table",
+
+  "gui.transtable_overhaul.crafting.clear": "Clear Crafting Grid",
+  "gui.transtable_overhaul.crafting.source": "Ingredient Source",
+  "gui.transtable_overhaul.crafting.source.table": "Learned items (EMC) first",
+  "gui.transtable_overhaul.crafting.source.inventory": "Your inventory first",
+  "gui.transtable_overhaul.crafting.source.desc": "Switching converts the grid right away. JEI recipe transfer and running out while crafting also use this; anything the first source can't supply comes from the other one.",
+  "gui.transtable_overhaul.crafting.cost": "Cost: %s EMC",
+  "gui.transtable_overhaul.crafting.cost.exact": "%s EMC per craft",
+  "gui.transtable_overhaul.crafting.cost.too_high": "Not enough EMC",
+  "gui.transtable_overhaul.crafting.cost.desc": "EMC paid per craft for the ingredients taken from learned items (marked with a gem). Ingredients from your inventory (marked with a chest) are used up instead.",
+  "gui.transtable_overhaul.crafting.placeholder": "From EMC: paid for on every craft",
+  "gui.transtable_overhaul.crafting.placeholder.desc": "Click to remove, click with an item to replace",
+  "gui.transtable_overhaul.crafting.from_inventory": "From your inventory",
+  "gui.transtable_overhaul.crafting.missing": "Missing ingredients",
+
   "gui.transtable_overhaul.search": "Search",
   "gui.transtable_overhaul.search.hint": "Search...",
   "gui.transtable_overhaul.emc": "EMC",
@@ -34,7 +50,8 @@
   "gui.transtable_overhaul.slot.klein_star": "Klein Star",
   "gui.transtable_overhaul.slot.klein_star.desc": "Klein Stars here are charged from your EMC and can be spent from like your own EMC.",
 
-  "transtable_overhaul.configuration.title": "Transmutation Terminal Settings",
+  "transtable_overhaul.configuration.title": "TransTable Overhaul Settings",
+  "transtable_overhaul.configuration.craftingPreferInventory": "Crafting: Inventory First",
   "transtable_overhaul.configuration.terminal": "Terminal",
   "transtable_overhaul.configuration.sortOrder": "Sort By",
   "transtable_overhaul.configuration.sortDirection": "Sort Direction",

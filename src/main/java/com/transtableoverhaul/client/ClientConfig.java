@@ -13,6 +13,7 @@ public final class ClientConfig {
     public static final ModConfigSpec.BooleanValue SYNC_SEARCH;
     public static final ModConfigSpec.BooleanValue AUTO_FOCUS_SEARCH;
     public static final ModConfigSpec.BooleanValue REMEMBER_SEARCH;
+    public static final ModConfigSpec.BooleanValue CRAFTING_PREFER_INVENTORY;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -32,6 +33,8 @@ public final class ClientConfig {
                 .define("autoFocusSearch", false);
         REMEMBER_SEARCH = builder.comment("Keep the last search text when reopening the terminal.")
                 .define("rememberSearch", true);
+        CRAFTING_PREFER_INVENTORY = builder.comment("Crafting terminal: take ingredients from your inventory first instead of from learned items (EMC). Also changed by the ⇄ button.")
+                .define("craftingPreferInventory", false);
         builder.pop();
         SPEC = builder.build();
     }

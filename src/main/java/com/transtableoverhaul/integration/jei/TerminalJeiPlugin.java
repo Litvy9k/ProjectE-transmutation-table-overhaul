@@ -1,7 +1,12 @@
 package com.transtableoverhaul.integration.jei;
 
 import com.transtableoverhaul.TransTableOverhaul;
+import com.transtableoverhaul.client.screen.TransmutationCraftingScreen;
 import com.transtableoverhaul.client.screen.TransmutationTerminalScreen;
+import com.transtableoverhaul.registry.ModRegistries;
+import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
+import mezz.jei.api.registration.IRecipeTransferRegistration;
 import java.util.List;
 import java.util.Optional;
 import mezz.jei.api.IModPlugin;
@@ -32,23 +37,37 @@ public class TerminalJeiPlugin implements IModPlugin {
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
         IIngredientManager ingredients = registration.getJeiHelpers().getIngredientManager();
-        registration.addGuiContainerHandler(TransmutationTerminalScreen.class, new IGuiContainerHandler<>() {
-            @NotNull
-            @Override
-            public List<Rect2i> getGuiExtraAreas(@NotNull TransmutationTerminalScreen screen) {
-                return screen.getExtraAreas();
-            }
+        registration.addGuiContainerHandler(TransmutationTerminalScreen.class, new TerminalHandler<>(ingredients));
+        registration.addGuiContainerHandler(TransmutationCraftingScreen.class, new TerminalHandler<>(ingredients));
+    }
 
-            @NotNull
-            @Override
-            public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(@NotNull TransmutationTerminalScreen screen, double mouseX, double mouseY) {
-                TransmutationTerminalScreen.GridHit hit = screen.getGridHit(mouseX, mouseY);
-                if (hit == null) {
-                    return Optional.empty();
-                }
-                return ingredients.createClickableIngredient(VanillaTypes.ITEM_STACK, hit.stack(), hit.area(), true).map(ingredient -> ingredient);
+    @Override
+    public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
+        registration.addRecipeTransferHandler(new CraftingTransferHandler(registration.getTransferHelper()), RecipeTypes.CRAFTING);
+    }
+
+    @Override
+    public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        registration.addRecipeCatalyst(ModRegistries.CRAFTING_TABLE_ITEM.get(), RecipeTypes.CRAFTING);
+    }
+
+    private record TerminalHandler<T extends TransmutationTerminalScreen>(IIngredientManager ingredients) implements IGuiContainerHandler<T> {
+
+        @NotNull
+        @Override
+        public List<Rect2i> getGuiExtraAreas(@NotNull T screen) {
+            return screen.getExtraAreas();
+        }
+
+        @NotNull
+        @Override
+        public Optional<IClickableIngredient<?>> getClickableIngredientUnderMouse(@NotNull T screen, double mouseX, double mouseY) {
+            TransmutationTerminalScreen.GridHit hit = screen.getGridHit(mouseX, mouseY);
+            if (hit == null) {
+                return Optional.empty();
             }
-        });
+            return ingredients.createClickableIngredient(VanillaTypes.ITEM_STACK, hit.stack(), hit.area(), true).map(ingredient -> ingredient);
+        }
     }
 
     @Override

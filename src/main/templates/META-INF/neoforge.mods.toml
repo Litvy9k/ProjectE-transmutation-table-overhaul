@@ -10,7 +10,7 @@ displayName="${mod_name}"
 authors="${mod_authors}"
 displayURL="https://github.com/Litvy9k/ProjectE-transmutation-table-overhaul"
 logoFile="transtable_overhaul.png"
-credits="ProjectE by sinkillerj and contributors. Layout inspired by Applied Energistics 2 terminals."
+credits="ProjectE by sinkillerj and contributors (logo uses ProjectE's Philosopher's Stone texture, MIT). Layout inspired by Applied Energistics 2 terminals."
 description='''
 Replaces the ProjectE Transmutation Table / Tablet screen with a scrollable, searchable, sortable terminal in the style of Applied Energistics 2.
 '''

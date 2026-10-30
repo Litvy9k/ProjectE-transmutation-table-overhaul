@@ -291,6 +291,93 @@ def icon_size(img, x, y, height):
         rect(img, x + 6, gy, 4, 1, ICON)
 
 
+def icon_clear(img, x, y):
+    for i in range(10):
+        for (px, py) in ((3 + i, 3 + i), (12 - i, 3 + i)):
+            img.putpixel((x + px, y + py), RED)
+            if px + 1 < 14:
+                img.putpixel((x + px + 1, y + py), RED)
+
+
+SWAP_ARROWS = [
+    ".......#....",
+    ".......##...",
+    "###########.",
+    ".......##...",
+    ".......#....",
+    "....#.......",
+    "...##.......",
+    ".###########",
+    "...##.......",
+    "....#.......",
+]
+BROWN = (139, 94, 52, 255)
+BROWN_DARK = (92, 60, 30, 255)
+
+
+def icon_source(img, x, y, inventory):
+    # Arrows centered, the source marker sits on top in the corner
+    draw_mask(img, x + 2, y + 3, SWAP_ARROWS, {"#": ICON})
+    marker(img, x, y, inventory)
+
+
+MARKER_GEM = [
+    ".#####.",
+    "#hoooo#",
+    "#######",
+    ".#ooo#.",
+    "..#o#..",
+    "...#...",
+    ".......",
+]
+MARKER_CHEST = [
+    "#######",
+    "#ooooo#",
+    "###y###",
+    "#ooooo#",
+    "#ooooo#",
+    "#######",
+    ".......",
+]
+
+
+def marker(img, x, y, inventory):
+    if inventory:
+        draw_mask(img, x, y, MARKER_CHEST, {"#": BROWN_DARK, "o": BROWN, "y": GOLD})
+    else:
+        draw_mask(img, x, y, MARKER_GEM, {"#": GOLD_DARK, "o": GOLD, "h": WHITE})
+
+
+def crafting_section(img, x0, y0):
+    """3x3 grid, arrow and result slot. Drawn on a taller panel and cropped so it tiles with the other slices."""
+    tmp = Image.new("RGBA", (WIDTH, 100), CLEAR)
+    panel(tmp, 0, 0, WIDTH, 100)
+    top = 20
+    for r in range(3):
+        for c in range(3):
+            slot(tmp, 25 + c * 18, top + r * 18)
+    for r in range(15):
+        head = 7 - abs(r - 7)
+        for x in range(14, 14 + head + 1):
+            tmp.putpixel((88 + x, top + 20 + r), SLOT_FILL)
+        if 5 <= r <= 9:
+            for x in range(0, 14):
+                tmp.putpixel((88 + x, top + 20 + r), SLOT_FILL)
+    sunken(tmp, 119, top + 14, 26, 26)
+    img.alpha_composite(tmp.crop((0, top, WIDTH, top + 58)), (x0, y0))
+
+
+def blue_table_top():
+    """ProjectE's table top with the light grey disk tinted light blue."""
+    im = Image.open(Path(__file__).with_name("projecte_transmutation_top.png")).convert("RGBA")
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, a = im.getpixel((x, y))
+            if max(r, g, b) - min(r, g, b) <= 12 and r >= 140:
+                im.putpixel((x, y), (min(255, int(r * 0.88)), min(255, int(r * 1.17)), min(255, int(r * 1.38)), a))
+    return im
+
+
 def icon_sync(img, x, y, on):
     color = GREEN if on else ICON
     draw_mask(img, x + 1, y + 1, [
@@ -385,6 +472,14 @@ def build():
     icon_size(img, 144, iy, 12)
     icon_sync(img, 160, iy, False)
     icon_sync(img, 176, iy, True)
+    icon_clear(img, 192, iy)
+    icon_source(img, 208, iy, False)
+    icon_source(img, 224, iy, True)
+    # Grid slot source markers (7x7)
+    marker(img, 240, 176, False)
+    marker(img, 240, 184, True)
+
+    crafting_section(img, 0, 192)
     return img
 
 
@@ -407,17 +502,9 @@ def logo():
     # stand
     rect(img, 12, 28, 8, 2, SHADOW)
     rect(img, 9, 30, 14, 2, SLOT_DARK)
-    # EMC gem in the corner
-    draw_mask(img, 19, 16, [
-        "..######...",
-        ".#hhoooo#..",
-        "#hooooooo#.",
-        "##########.",
-        ".#oooooo#..",
-        "..#oooo#...",
-        "...#oo#....",
-        "....##.....",
-    ], {"#": GOLD_DARK, "o": GOLD, "h": WHITE})
+    # ProjectE's Philosopher's Stone in the corner (texture from ProjectE, MIT licensed)
+    stone = Image.open(Path(__file__).with_name("projecte_philosophers_stone.png")).convert("RGBA")
+    img.alpha_composite(stone, (16, 14))
     return img
 
 
@@ -443,6 +530,9 @@ if __name__ == "__main__":
     OUT.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(OUT)
     print("wrote", OUT)
+    block_top = ROOT / "src/main/resources/assets/transtable_overhaul/textures/block/transmutation_crafting_table_top.png"
+    block_top.parent.mkdir(parents=True, exist_ok=True)
+    blue_table_top().save(block_top)
     icon = logo()
     mod_logo = ROOT / "src/main/resources/transtable_overhaul.png"
     icon.resize((128, 128), Image.NEAREST).save(mod_logo)
