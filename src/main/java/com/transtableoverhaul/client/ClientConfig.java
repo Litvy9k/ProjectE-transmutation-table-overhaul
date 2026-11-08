@@ -1,22 +1,22 @@
 package com.transtableoverhaul.client;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 public final class ClientConfig {
 
-    public static final ModConfigSpec SPEC;
+    public static final ForgeConfigSpec SPEC;
 
-    public static final ModConfigSpec.EnumValue<SortOrder> SORT_ORDER;
-    public static final ModConfigSpec.EnumValue<SortDirection> SORT_DIRECTION;
-    public static final ModConfigSpec.EnumValue<ViewMode> VIEW_MODE;
-    public static final ModConfigSpec.EnumValue<TerminalSize> TERMINAL_SIZE;
-    public static final ModConfigSpec.BooleanValue SYNC_SEARCH;
-    public static final ModConfigSpec.BooleanValue AUTO_FOCUS_SEARCH;
-    public static final ModConfigSpec.BooleanValue REMEMBER_SEARCH;
-    public static final ModConfigSpec.BooleanValue CRAFTING_PREFER_INVENTORY;
+    public static final ForgeConfigSpec.EnumValue<SortOrder> SORT_ORDER;
+    public static final ForgeConfigSpec.EnumValue<SortDirection> SORT_DIRECTION;
+    public static final ForgeConfigSpec.EnumValue<ViewMode> VIEW_MODE;
+    public static final ForgeConfigSpec.EnumValue<TerminalSize> TERMINAL_SIZE;
+    public static final ForgeConfigSpec.BooleanValue SYNC_SEARCH;
+    public static final ForgeConfigSpec.BooleanValue AUTO_FOCUS_SEARCH;
+    public static final ForgeConfigSpec.BooleanValue REMEMBER_SEARCH;
+    public static final ForgeConfigSpec.BooleanValue CRAFTING_PREFER_INVENTORY;
 
     static {
-        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         builder.comment("Transmutation terminal settings. The sort/view/size values are also changed by the buttons in the terminal.")
                 .push("terminal");
         SORT_ORDER = builder.comment("What the item grid is sorted by.")
@@ -42,7 +42,7 @@ public final class ClientConfig {
     private ClientConfig() {
     }
 
-    public static <E extends Enum<E>> void set(ModConfigSpec.ConfigValue<E> value, E newValue) {
+    public static <E extends Enum<E>> void set(ForgeConfigSpec.ConfigValue<E> value, E newValue) {
         value.set(newValue);
         value.save();
     }

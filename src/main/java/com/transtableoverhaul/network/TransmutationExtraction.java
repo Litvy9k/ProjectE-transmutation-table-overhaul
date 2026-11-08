@@ -36,7 +36,7 @@ public final class TransmutationExtraction {
         if (toInventory) {
             amount = Math.min(amount, roomInMainInventory(player.getInventory(), stack));
         } else if (!carried.isEmpty()) {
-            if (!ItemStack.isSameItemSameComponents(carried, stack)) {
+            if (!ItemStack.isSameItemSameTags(carried, stack)) {
                 return;
             }
             amount = Math.min(amount, carried.getMaxStackSize() - carried.getCount());
@@ -75,8 +75,8 @@ public final class TransmutationExtraction {
         for (ItemStack existing : inventory.items) {
             if (existing.isEmpty()) {
                 room += stack.getMaxStackSize();
-            } else if (ItemStack.isSameItemSameComponents(existing, stack)) {
-                room += Math.max(0, Math.min(existing.getMaxStackSize(), inventory.getMaxStackSize(existing)) - existing.getCount());
+            } else if (ItemStack.isSameItemSameTags(existing, stack)) {
+                room += Math.max(0, Math.min(existing.getMaxStackSize(), inventory.getMaxStackSize()) - existing.getCount());
             }
         }
         return room;

@@ -2,15 +2,14 @@ package com.transtableoverhaul;
 
 import com.mojang.logging.LogUtils;
 import com.transtableoverhaul.client.ClientConfig;
-import com.transtableoverhaul.network.ExtractItemPayload;
-import com.transtableoverhaul.network.FillCraftingGridPayload;
+import com.transtableoverhaul.network.ModNetwork;
 import com.transtableoverhaul.registry.ModRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 @Mod(TransTableOverhaul.MODID)
@@ -19,21 +18,14 @@ public class TransTableOverhaul {
     public static final String MODID = "transtable_overhaul";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public TransTableOverhaul(IEventBus modBus, ModContainer container) {
+    public TransTableOverhaul() {
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModRegistries.register(modBus);
-        modBus.addListener(TransTableOverhaul::registerPayloads);
-        container.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
-    }
-
-    private static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        // Optional so that a client with the mod can still join a server without it (the screen then falls back to ProjectE's).
-        event.registrar("2")
-                .optional()
-                .playToServer(ExtractItemPayload.TYPE, ExtractItemPayload.STREAM_CODEC, ExtractItemPayload::handle)
-                .playToServer(FillCraftingGridPayload.TYPE, FillCraftingGridPayload.STREAM_CODEC, FillCraftingGridPayload::handle);
+        ModNetwork.register();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
     }
 
     public static ResourceLocation rl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+        return new ResourceLocation(MODID, path);
     }
 }

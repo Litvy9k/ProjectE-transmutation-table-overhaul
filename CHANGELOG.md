@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 for Minecraft 1.20.1 (Forge)
+
+- First 1.20.1 release, same features as 1.1.2 for 1.21.1. Requires ProjectE 1.0.1 for 1.20.1.
+- No in-game config screen on 1.20.1 Forge; edit `config/transtable_overhaul-client.toml` instead.
+
 ## 1.1.2 - Minecraft 1.21.1 (NeoForge)
 
 - New item: **Portable Transmutation Crafting Table** (Transmutation Tablet on top of Dark Matter). Right-click to open

@@ -5,7 +5,6 @@ import com.transtableoverhaul.crafting.TransmutationCraftingMenu;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.TransmutationEMCFormatter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,9 +14,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -182,10 +179,9 @@ public class TransmutationCraftingScreen extends TransmutationTerminalScreen {
             List<RecipeOption> options = new ArrayList<>();
             if (minecraft != null && minecraft.level != null) {
                 Level level = minecraft.level;
-                CraftingInput input = craftingMenu.craftInput();
-                List<RecipeHolder<CraftingRecipe>> recipes = craftingMenu.matchingRecipes(level);
+                List<CraftingRecipe> recipes = craftingMenu.matchingRecipes(level);
                 for (int i = 0; i < recipes.size(); i++) {
-                    options.add(new RecipeOption(i, recipes.get(i).value().assemble(input, level.registryAccess())));
+                    options.add(new RecipeOption(i, craftingMenu.assemble(recipes.get(i), level)));
                 }
             }
             recipeOptions = options;
@@ -339,7 +335,7 @@ public class TransmutationCraftingScreen extends TransmutationTerminalScreen {
         CostState cost = costState();
         if (cost != null) {
             MutableComponent value = TransmutationEMCFormatter.formatEMC(cost.emc()).copy()
-                    .withColor(cost.affordable() ? COST_COLOR : COST_TOO_HIGH_COLOR);
+                    .withStyle(style -> style.withColor(cost.affordable() ? COST_COLOR : COST_TOO_HIGH_COLOR));
             Component text = Component.translatable(LANG + "crafting.cost", value);
             graphics.drawString(font, clip(text, COST_WIDTH), COST_X, craftingTop() + COST_Y, 0x404040, false);
         }
@@ -355,7 +351,7 @@ public class TransmutationCraftingScreen extends TransmutationTerminalScreen {
             CostState cost = costState();
             if (cost != null && isHovering(COST_X, craftingTop() + COST_Y - 1, COST_WIDTH, 10, mouseX, mouseY)) {
                 List<FormattedCharSequence> lines = new ArrayList<>();
-                lines.add(Component.translatable(LANG + "crafting.cost.exact", EMCHelper.formatEmc(cost.emc())).getVisualOrderText());
+                lines.add(Component.translatable(LANG + "crafting.cost.exact", CountFormatter.exact(cost.emc())).getVisualOrderText());
                 if (!cost.affordable()) {
                     lines.add(Component.translatable(LANG + "crafting.cost.too_high").withStyle(ChatFormatting.RED).getVisualOrderText());
                 }

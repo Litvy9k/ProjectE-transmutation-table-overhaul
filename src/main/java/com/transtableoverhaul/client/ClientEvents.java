@@ -2,16 +2,15 @@ package com.transtableoverhaul.client;
 
 import com.transtableoverhaul.TransTableOverhaul;
 import com.transtableoverhaul.client.screen.TransmutationTerminalScreen;
-import com.transtableoverhaul.network.ExtractItemPayload;
+import com.transtableoverhaul.network.ModNetwork;
 import moze_intel.projecte.gameObjs.gui.GUITransmutation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
-@EventBusSubscriber(modid = TransTableOverhaul.MODID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = TransTableOverhaul.MODID, value = Dist.CLIENT)
 public final class ClientEvents {
 
     private ClientEvents() {
@@ -23,16 +22,11 @@ public final class ClientEvents {
      */
     @SubscribeEvent
     public static void onScreenOpening(ScreenEvent.Opening event) {
-        if (event.getNewScreen() instanceof GUITransmutation original && serverSupportsTerminal()) {
+        if (event.getNewScreen() instanceof GUITransmutation original && ModNetwork.serverHasMod()) {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.player != null) {
                 event.setNewScreen(new TransmutationTerminalScreen(original.getMenu(), minecraft.player.getInventory(), original.getTitle()));
             }
         }
-    }
-
-    private static boolean serverSupportsTerminal() {
-        ClientPacketListener connection = Minecraft.getInstance().getConnection();
-        return connection != null && connection.hasChannel(ExtractItemPayload.TYPE);
     }
 }

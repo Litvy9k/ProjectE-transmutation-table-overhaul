@@ -34,8 +34,8 @@ Craft it from a Transmutation Table on top of a piece of Dark Matter. It works l
 
 ## Requirements
 
-- Minecraft 1.21.1 with NeoForge
-- [ProjectE](https://www.curseforge.com/minecraft/mc-mods/projecte) 1.1.0 or newer
+- Minecraft 1.21.1 with NeoForge and ProjectE 1.1.0 or newer, **or** Minecraft 1.20.1 with Forge 47 (or NeoForge 1.20.1) and ProjectE 1.0.1 or newer
+- [ProjectE](https://www.curseforge.com/minecraft/mc-mods/projecte)
 - Optional: JEI or EMI
 
 Install it on **both the client and the server**. Every transmutation is checked on the server (knowledge, EMC, inventory space). If a server doesn't have the mod, the client falls back to ProjectE's original screen.
@@ -65,4 +65,4 @@ Install it on **both the client and the server**. Every transmutation is checked
   - 点击取出产物，Shift + 点击合成一组；取出有 EMC 值的产物时会同时学习它。
   - 有多个配方匹配时，结果槽旁边会出现切换配方按钮。
 - **便携式合成转化桌**（转化平板放在暗物质上合成）：右键即可随时打开合成终端。
-- 需要 ProjectE 1.1.0 及以上版本，**客户端和服务端都要安装**。
+- 支持 1.21.1（NeoForge，ProjectE 1.1.0+）和 1.20.1（Forge 47 / NeoForge 1.20.1，ProjectE 1.0.1+），**客户端和服务端都要安装**。

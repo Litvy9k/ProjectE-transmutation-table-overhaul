@@ -5,26 +5,22 @@ import com.transtableoverhaul.client.screen.TransmutationCraftingScreen;
 import com.transtableoverhaul.crafting.TransmutationCraftingMenu;
 import moze_intel.projecte.gameObjs.container.TransmutationContainer;
 import com.transtableoverhaul.registry.ModRegistries;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-@Mod(value = TransTableOverhaul.MODID, dist = Dist.CLIENT)
-public class TransTableOverhaulClient {
+@Mod.EventBusSubscriber(modid = TransTableOverhaul.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public final class TransTableOverhaulClient {
 
-    public TransTableOverhaulClient(ModContainer container, IEventBus modBus) {
-        // "Config" button in the mod list
-        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-        modBus.addListener(TransTableOverhaulClient::registerScreens);
+    private TransTableOverhaulClient() {
     }
 
-    private static void registerScreens(RegisterMenuScreensEvent event) {
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
         // The screen's menu type is ProjectE's TransmutationContainer, so the constructor reference can't be inferred
-        event.<TransmutationContainer, TransmutationCraftingScreen>register(ModRegistries.CRAFTING_MENU.get(),
-                (menu, inventory, title) -> new TransmutationCraftingScreen((TransmutationCraftingMenu) menu, inventory, title));
+        event.enqueueWork(() -> MenuScreens.<TransmutationContainer, TransmutationCraftingScreen>register(ModRegistries.CRAFTING_MENU.get(),
+                (menu, inventory, title) -> new TransmutationCraftingScreen((TransmutationCraftingMenu) menu, inventory, title)));
     }
 }

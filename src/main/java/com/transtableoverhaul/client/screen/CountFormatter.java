@@ -1,6 +1,7 @@
 package com.transtableoverhaul.client.screen;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 
 /**
  * AE2 style compact amounts: exact up to 9999, then 10K, 123K, 1.2M ...
@@ -11,6 +12,13 @@ public final class CountFormatter {
     private static final BigInteger EXACT_LIMIT = BigInteger.valueOf(10_000);
 
     private CountFormatter() {
+    }
+
+    /**
+     * Full number with digit grouping, for tooltips.
+     */
+    public static String exact(BigInteger amount) {
+        return NumberFormat.getIntegerInstance().format(amount);
     }
 
     public static String compact(BigInteger amount) {

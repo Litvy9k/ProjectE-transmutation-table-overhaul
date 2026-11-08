@@ -41,7 +41,7 @@ public final class CraftingSources {
     public static int countInInventory(Player player, ItemStack template) {
         int count = 0;
         for (ItemStack stack : player.getInventory().items) {
-            if (ItemStack.isSameItemSameComponents(stack, template)) {
+            if (ItemStack.isSameItemSameTags(stack, template)) {
                 count += stack.getCount();
             }
         }
@@ -56,7 +56,7 @@ public final class CraftingSources {
         List<ItemStack> items = player.getInventory().items;
         for (int i = 0; i < items.size() && taken.getCount() < max; i++) {
             ItemStack stack = items.get(i);
-            if (ItemStack.isSameItemSameComponents(stack, template)) {
+            if (ItemStack.isSameItemSameTags(stack, template)) {
                 ItemStack split = stack.split(max - taken.getCount());
                 if (taken.isEmpty()) {
                     taken = split;

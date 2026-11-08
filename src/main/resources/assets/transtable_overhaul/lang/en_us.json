@@ -21,6 +21,7 @@
   "gui.transtable_overhaul.search": "Search",
   "gui.transtable_overhaul.search.hint": "Search...",
   "gui.transtable_overhaul.emc": "EMC",
+  "gui.transtable_overhaul.emc.exact": "EMC: %s",
   "gui.transtable_overhaul.learned": "Learned new item!",
   "gui.transtable_overhaul.unlearned": "Item forgotten",
   "gui.transtable_overhaul.tooltip.affordable": "Can make: %s",

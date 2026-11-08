@@ -8,7 +8,7 @@ import java.util.Optional;
 import moze_intel.projecte.gameObjs.container.TransmutationContainer;
 import moze_intel.projecte.api.proxy.IEMCProxy;
 import net.minecraft.core.NonNullList;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,12 +24,10 @@ import net.minecraft.world.inventory.ResultSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.CommonHooks;
+import net.minecraftforge.common.ForgeHooks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,12 +63,12 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private boolean suppressUpdates;
     private boolean lastAffordable = true;
     @Nullable
-    private RecipeHolder<CraftingRecipe> lastRecipe;
+    private CraftingRecipe lastRecipe;
     /** Recipe the player picked when several match; used whenever it matches the grid. */
     @Nullable
     private ResourceLocation selectedRecipe;
 
-    public static TransmutationCraftingMenu fromNetwork(int windowId, Inventory playerInv, RegistryFriendlyByteBuf buf) {
+    public static TransmutationCraftingMenu fromNetwork(int windowId, Inventory playerInv, FriendlyByteBuf buf) {
         if (buf.readBoolean()) {
             return new TransmutationCraftingMenu(windowId, playerInv, buf.readEnum(InteractionHand.class), buf.readByte());
         }
@@ -100,7 +98,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     /**
      * Writes what {@link #fromNetwork} reads.
      */
-    public static void writeOpenData(RegistryFriendlyByteBuf buf, @Nullable InteractionHand hand, int selected) {
+    public static void writeOpenData(FriendlyByteBuf buf, @Nullable InteractionHand hand, int selected) {
         buf.writeBoolean(hand != null);
         if (hand != null) {
             buf.writeEnum(hand);
@@ -198,23 +196,26 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     /**
      * Every recipe the grid matches, in a stable order (the same on client and server).
      */
-    public List<RecipeHolder<CraftingRecipe>> matchingRecipes(Level level) {
-        return level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, craftSlots.asCraftInput(), level);
+    public List<CraftingRecipe> matchingRecipes(Level level) {
+        return level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, craftSlots, level);
     }
 
-    public CraftingInput craftInput() {
-        return craftSlots.asCraftInput();
+    /**
+     * Result of {@code recipe} with what is in the grid.
+     */
+    public ItemStack assemble(CraftingRecipe recipe, Level level) {
+        return recipe.assemble(craftSlots, level.registryAccess());
     }
 
-    private Optional<RecipeHolder<CraftingRecipe>> findRecipe(Level level, CraftingInput input) {
+    private Optional<CraftingRecipe> findRecipe(Level level) {
         if (selectedRecipe != null) {
-            for (RecipeHolder<CraftingRecipe> recipe : level.getRecipeManager().getRecipesFor(RecipeType.CRAFTING, input, level)) {
-                if (recipe.id().equals(selectedRecipe)) {
+            for (CraftingRecipe recipe : matchingRecipes(level)) {
+                if (recipe.getId().equals(selectedRecipe)) {
                     return Optional.of(recipe);
                 }
             }
         }
-        return level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, input, level, lastRecipe);
+        return level.getRecipeManager().getRecipeFor(RecipeType.CRAFTING, craftSlots, level);
     }
 
     /**
@@ -222,7 +223,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
      */
     public boolean canSupply(ItemStack template) {
         for (int i = 0; i < GRID_SIZE; i++) {
-            if (ItemStack.isSameItemSameComponents(craftSlots.getItem(i), template)) {
+            if (ItemStack.isSameItemSameTags(craftSlots.getItem(i), template)) {
                 return true;
             }
         }
@@ -278,54 +279,49 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     }
 
     private void consumeIngredients(Player player) {
-        CraftingInput.Positioned positioned = craftSlots.asPositionedCraftInput();
-        CraftingInput input = positioned.input();
         Level level = player.level();
-        CommonHooks.setCraftingPlayer(player);
+        ForgeHooks.setCraftingPlayer(player);
         // The picked recipe decides the leftovers too, not just the first one that matches
-        NonNullList<ItemStack> remaining = lastRecipe != null && lastRecipe.value().matches(input, level)
-                ? lastRecipe.value().getRemainingItems(input)
-                : level.getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, input, level);
-        CommonHooks.setCraftingPlayer(null);
+        NonNullList<ItemStack> remaining = lastRecipe != null && lastRecipe.matches(craftSlots, level)
+                ? lastRecipe.getRemainingItems(craftSlots)
+                : level.getRecipeManager().getRemainingItemsFor(RecipeType.CRAFTING, craftSlots, level);
+        ForgeHooks.setCraftingPlayer(null);
 
         BigInteger cost = BigInteger.ZERO;
         suppressUpdates = true;
         try {
-            for (int y = 0; y < input.height(); y++) {
-                for (int x = 0; x < input.width(); x++) {
-                    int slot = x + positioned.left() + (y + positioned.top()) * craftSlots.getWidth();
-                    ItemStack inSlot = craftSlots.getItem(slot);
-                    ItemStack leftover = remaining.get(x + y * input.width());
-                    if (isPlaceholder(slot)) {
-                        cost = cost.add(BigInteger.valueOf(CraftingSources.learnedValue(transmutationInventory, inSlot)));
-                        if (!leftover.isEmpty()) {
-                            player.getInventory().placeItemBackInInventory(leftover);
-                        }
-                        continue;
-                    }
-                    ItemStack template = inSlot.copyWithCount(1);
-                    if (!inSlot.isEmpty()) {
-                        craftSlots.removeItem(slot, 1);
-                        inSlot = craftSlots.getItem(slot);
-                    }
+            for (int slot = 0; slot < remaining.size(); slot++) {
+                ItemStack inSlot = craftSlots.getItem(slot);
+                ItemStack leftover = remaining.get(slot);
+                if (isPlaceholder(slot)) {
+                    cost = cost.add(BigInteger.valueOf(CraftingSources.learnedValue(transmutationInventory, inSlot)));
                     if (!leftover.isEmpty()) {
-                        if (inSlot.isEmpty()) {
-                            craftSlots.setItem(slot, leftover);
-                        } else if (ItemStack.isSameItemSameComponents(inSlot, leftover)) {
-                            leftover.grow(inSlot.getCount());
-                            craftSlots.setItem(slot, leftover);
-                        } else if (!player.getInventory().add(leftover)) {
-                            player.drop(leftover, false);
-                        }
-                    } else if (inSlot.isEmpty()) {
-                        // Ran out: refill from the inventory if that is the preferred source, otherwise keep going on EMC
-                        ItemStack refill = preferInventory ? CraftingSources.takeFromInventory(player, template, 1) : ItemStack.EMPTY;
-                        if (!refill.isEmpty()) {
-                            craftSlots.setItem(slot, refill);
-                        } else if (CraftingSources.learnedValue(transmutationInventory, template) > 0) {
-                            setPlaceholder(slot, true);
-                            craftSlots.setItem(slot, CraftingSources.placeholder(template));
-                        }
+                        player.getInventory().placeItemBackInInventory(leftover);
+                    }
+                    continue;
+                }
+                ItemStack template = inSlot.copyWithCount(1);
+                if (!inSlot.isEmpty()) {
+                    craftSlots.removeItem(slot, 1);
+                    inSlot = craftSlots.getItem(slot);
+                }
+                if (!leftover.isEmpty()) {
+                    if (inSlot.isEmpty()) {
+                        craftSlots.setItem(slot, leftover);
+                    } else if (ItemStack.isSameItemSameTags(inSlot, leftover)) {
+                        leftover.grow(inSlot.getCount());
+                        craftSlots.setItem(slot, leftover);
+                    } else if (!player.getInventory().add(leftover)) {
+                        player.drop(leftover, false);
+                    }
+                } else if (inSlot.isEmpty()) {
+                    // Ran out: refill from the inventory if that is the preferred source, otherwise keep going on EMC
+                    ItemStack refill = preferInventory ? CraftingSources.takeFromInventory(player, template, 1) : ItemStack.EMPTY;
+                    if (!refill.isEmpty()) {
+                        craftSlots.setItem(slot, refill);
+                    } else if (CraftingSources.learnedValue(transmutationInventory, template) > 0) {
+                        setPlaceholder(slot, true);
+                        craftSlots.setItem(slot, CraftingSources.placeholder(template));
                     }
                 }
             }
@@ -352,14 +348,13 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
     private void updateResult() {
         Level level = serverLevel();
         if (level != null) {
-            CraftingInput input = craftSlots.asCraftInput();
             ItemStack result = ItemStack.EMPTY;
             lastAffordable = canAffordPlaceholders();
-            Optional<RecipeHolder<CraftingRecipe>> recipe = findRecipe(level, input);
+            Optional<CraftingRecipe> recipe = findRecipe(level);
             if (recipe.isPresent() && player instanceof ServerPlayer serverPlayer && resultSlots.setRecipeUsed(level, serverPlayer, recipe.get())
                     && lastAffordable) {
                 lastRecipe = recipe.get();
-                ItemStack assembled = recipe.get().value().assemble(input, level.registryAccess());
+                ItemStack assembled = assemble(recipe.get(), level);
                 if (assembled.isItemEnabled(level.enabledFeatures())) {
                     result = assembled;
                 }
@@ -402,7 +397,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
         if (clickType == ClickType.PICKUP && !carried.isEmpty()) {
             int amount = button == 0 ? carried.getCount() : 1;
             setPlaceholder(gridIndex, false);
-            craftSlots.setItem(gridIndex, carried.split(Math.min(amount, craftSlots.getMaxStackSize(carried))));
+            craftSlots.setItem(gridIndex, carried.split(Math.min(amount, Math.min(carried.getMaxStackSize(), craftSlots.getMaxStackSize()))));
             setCarried(carried);
         } else if (clickType == ClickType.PICKUP || clickType == ClickType.QUICK_MOVE || clickType == ClickType.THROW) {
             setPlaceholder(gridIndex, false);
@@ -421,7 +416,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
         ItemStack first = slot.getItem().copy();
         int target = first.getMaxStackSize();
         int produced = 0;
-        while (slot.hasItem() && ItemStack.isSameItemSameComponents(slot.getItem(), first) && slot.mayPickup(player)
+        while (slot.hasItem() && ItemStack.isSameItemSameTags(slot.getItem(), first) && slot.mayPickup(player)
                 && (produced == 0 || produced + slot.getItem().getCount() <= target)) {
             int crafted = quickCraftOnce(player, slot);
             if (crafted <= 0) {
@@ -516,7 +511,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
             // Keep what already fits, return the rest so it can be used again below
             for (int i = 0; i < GRID_SIZE; i++) {
                 ItemStack current = craftSlots.getItem(i);
-                if (!current.isEmpty() && options(alternatives, i).stream().noneMatch(option -> ItemStack.isSameItemSameComponents(option, current))) {
+                if (!current.isEmpty() && options(alternatives, i).stream().noneMatch(option -> ItemStack.isSameItemSameTags(option, current))) {
                     clearSlot(player, i);
                 }
             }
@@ -571,7 +566,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
             }
             List<Integer> group = null;
             for (List<Integer> existing : groups) {
-                if (ItemStack.isSameItemSameComponents(craftSlots.getItem(existing.getFirst()), stack)) {
+                if (ItemStack.isSameItemSameTags(craftSlots.getItem(existing.get(0)), stack)) {
                     group = existing;
                     break;
                 }
@@ -591,7 +586,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
         int[] inGrid = new int[groups.size()];
         for (int g = 0; g < groups.size(); g++) {
             List<Integer> group = groups.get(g);
-            ItemStack template = craftSlots.getItem(group.getFirst());
+            ItemStack template = craftSlots.getItem(group.get(0));
             for (int slot : group) {
                 inGrid[g] += craftSlots.getItem(slot).getCount();
             }
@@ -601,7 +596,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
 
         for (int g = 0; g < groups.size(); g++) {
             List<Integer> group = groups.get(g);
-            ItemStack template = craftSlots.getItem(group.getFirst()).copyWithCount(1);
+            ItemStack template = craftSlots.getItem(group.get(0)).copyWithCount(1);
             int wanted = sets * group.size();
             int available = inGrid[g];
             if (wanted > available) {
@@ -649,7 +644,7 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
                 } else if (!preferInventory && !isPlaceholder(i) && CraftingSources.learnedValue(transmutationInventory, stack) > 0) {
                     ItemStack placeholder = CraftingSources.placeholder(stack);
                     // Enchanted or damaged items can't be made from EMC as they are, leave those alone
-                    if (ItemStack.isSameItemSameComponents(placeholder, stack)) {
+                    if (ItemStack.isSameItemSameTags(placeholder, stack)) {
                         setPlaceholder(i, true);
                         craftSlots.setItem(i, placeholder);
                         player.getInventory().placeItemBackInInventory(stack);
@@ -693,12 +688,12 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
                     return false;
                 }
                 if (!player.level().isClientSide) {
-                    List<RecipeHolder<CraftingRecipe>> recipes = matchingRecipes(player.level());
+                    List<CraftingRecipe> recipes = matchingRecipes(player.level());
                     int index = id - BUTTON_SELECT_RECIPE;
                     if (index >= recipes.size()) {
                         return false;
                     }
-                    selectedRecipe = recipes.get(index).id();
+                    selectedRecipe = recipes.get(index).getId();
                     updateResult();
                 }
             }

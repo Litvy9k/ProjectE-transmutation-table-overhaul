@@ -2,7 +2,7 @@ package com.transtableoverhaul.client;
 
 import com.transtableoverhaul.integration.emi.EmiSearch;
 import com.transtableoverhaul.integration.jei.TerminalJeiPlugin;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 
 /**

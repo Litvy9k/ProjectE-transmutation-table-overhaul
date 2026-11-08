@@ -9,10 +9,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 /**
  * One learned item shown in the terminal grid. Tags and tooltip text are only computed when a search needs them.
@@ -90,7 +89,7 @@ public final class TerminalEntry implements SearchEntry {
     public String tooltip() {
         if (tooltip == null) {
             Minecraft minecraft = Minecraft.getInstance();
-            tooltip = stack.getTooltipLines(Item.TooltipContext.of(minecraft.level), minecraft.player, TooltipFlag.Default.NORMAL)
+            tooltip = stack.getTooltipLines(minecraft.player, TooltipFlag.Default.NORMAL)
                     .stream()
                     .map(Component::getString)
                     .collect(Collectors.joining("\n"))

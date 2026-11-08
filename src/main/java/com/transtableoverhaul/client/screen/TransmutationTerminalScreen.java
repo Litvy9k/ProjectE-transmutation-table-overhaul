@@ -6,7 +6,8 @@ import com.transtableoverhaul.client.ClientConfig.SortDirection;
 import com.transtableoverhaul.client.ClientConfig.ViewMode;
 import com.transtableoverhaul.client.RecipeViewerSync;
 import com.transtableoverhaul.client.search.SearchQuery;
-import com.transtableoverhaul.network.ExtractItemPayload;
+import com.transtableoverhaul.network.ExtractItemMessage;
+import com.transtableoverhaul.network.ModNetwork;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,9 +28,7 @@ import moze_intel.projecte.gameObjs.container.slots.transmutation.SlotLock;
 import moze_intel.projecte.gameObjs.container.slots.transmutation.SlotOutput;
 import moze_intel.projecte.gameObjs.container.slots.transmutation.SlotUnlearn;
 import moze_intel.projecte.gameObjs.gui.PEContainerScreen;
-import moze_intel.projecte.utils.EMCHelper;
 import moze_intel.projecte.utils.TransmutationEMCFormatter;
-import moze_intel.projecte.utils.text.PELang;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -43,7 +42,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -51,7 +49,7 @@ import org.lwjgl.glfw.GLFW;
 /**
  * AE2 terminal style replacement for ProjectE's transmutation screen. Works on top of ProjectE's own
  * {@link TransmutationContainer}: its real slots (Klein stars, lock, burn, unlearn, player inventory) are moved into this
- * layout, its 16 paged output slots are hidden, and the scrollable grid takes items out through {@link ExtractItemPayload}.
+ * layout, its 16 paged output slots are hidden, and the scrollable grid takes items out through {@link ExtractItemMessage}.
  */
 public class TransmutationTerminalScreen extends PEContainerScreen<TransmutationContainer> {
 
@@ -541,13 +539,13 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
             TerminalEntry entry = entryAt(mouseX, mouseY);
             if (entry != null) {
                 List<Component> lines = new ArrayList<>(getTooltipFromContainerItem(entry.stack()));
-                lines.add(Component.translatable(LANG + "tooltip.affordable", EMCHelper.formatEmc(affordable(entry))).withStyle(ChatFormatting.GRAY));
+                lines.add(Component.translatable(LANG + "tooltip.affordable", CountFormatter.exact(affordable(entry))).withStyle(ChatFormatting.GRAY));
                 lines.add(Component.translatable(LANG + "tooltip.controls").withStyle(ChatFormatting.DARK_GRAY));
                 graphics.renderTooltip(font, lines, entry.stack().getTooltipImage(), entry.stack(), mouseX, mouseY);
                 return;
             }
             if (isHovering(EMC_BOX_X, stripTop() + 3, EMC_BOX_WIDTH, SLOT, mouseX, mouseY)) {
-                graphics.renderTooltip(font, PELang.EMC_TOOLTIP.translate(EMCHelper.formatEmc(availableEmc)), mouseX, mouseY);
+                graphics.renderTooltip(font, Component.translatable(LANG + "emc.exact", CountFormatter.exact(availableEmc)), mouseX, mouseY);
                 return;
             }
             if (hoveredSlot != null && !hoveredSlot.hasItem()) {
@@ -567,13 +565,16 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
 
     @Nullable
     private static String slotHint(Slot slot) {
-        return switch (slot) {
-            case SlotConsume ignored -> "burn";
-            case SlotUnlearn ignored -> "unlearn";
-            case SlotLock ignored -> "lock";
-            case SlotInput ignored -> "klein_star";
-            default -> null;
-        };
+        if (slot instanceof SlotConsume) {
+            return "burn";
+        } else if (slot instanceof SlotUnlearn) {
+            return "unlearn";
+        } else if (slot instanceof SlotLock) {
+            return "lock";
+        } else if (slot instanceof SlotInput) {
+            return "klein_star";
+        }
+        return null;
     }
 
     // endregion
@@ -611,7 +612,7 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
             return;
         }
         ItemStack carried = menu.getCarried();
-        if (!carried.isEmpty() && (entry == null || !ItemStack.isSameItemSameComponents(carried, entry.stack()))) {
+        if (!carried.isEmpty() && (entry == null || !ItemStack.isSameItemSameTags(carried, entry.stack()))) {
             // Holding something else: drop it into ProjectE's burn slot, same as AE2 inserting into the network
             if (consumeSlot != null && consumeSlot.mayPlace(carried)) {
                 slotClicked(consumeSlot, consumeSlot.index, button, ClickType.PICKUP);
@@ -631,7 +632,7 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
         } else {
             amount = 1;
         }
-        PacketDistributor.sendToServer(new ExtractItemPayload(menu.containerId, entry.stack().copyWithCount(1), amount, toInventory));
+        ModNetwork.sendToServer(new ExtractItemMessage(menu.containerId, entry.stack().copyWithCount(1), amount, toInventory));
     }
 
     private void scrollTo(double mouseY) {
@@ -662,13 +663,13 @@ public class TransmutationTerminalScreen extends PEContainerScreen<Transmutation
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
         if (scrollY != 0 && isHovering(0, 0, WIDTH, stripTop(), mouseX, mouseY)) {
             int step = hasShiftDown() ? rows : 1;
             scrollRow = Mth.clamp(scrollRow - (int) Math.signum(scrollY) * step, 0, maxScroll());
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return super.mouseScrolled(mouseX, mouseY, scrollY);
     }
 
     @Override

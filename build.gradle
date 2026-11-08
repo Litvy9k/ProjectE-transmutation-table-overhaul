@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.148'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.91'
     id 'idea'
 }
 
@@ -22,7 +22,7 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 repositories {
     exclusiveContent {
@@ -43,8 +43,9 @@ repositories {
     }
 }
 
-neoForge {
-    version = project.neo_version
+legacyForge {
+    version = project.minecraft_version + '-' + project.forge_version
+    accessTransformers = files('src/main/resources/META-INF/accesstransformer.cfg')
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -60,6 +61,8 @@ neoForge {
             programArgument '--nogui'
         }
         configureEach {
+            // Separate from the 1.21.1 branch's run folder so worlds and configs don't mix
+            gameDirectory = project.file('run-1.20.1')
             logLevel = org.slf4j.event.Level.INFO
         }
     }
@@ -75,31 +78,36 @@ configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
-dependencies {
-    implementation "curse.maven:projecte-226410:${projecte_file_id}"
+obfuscation {
+    createRemappingConfiguration(configurations.localRuntime)
+}
 
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
-    compileOnly "dev.emi:emi-neoforge:${emi_version}:api"
+dependencies {
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+    modImplementation "curse.maven:projecte-226410:${projecte_file_id}"
+
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    modCompileOnly "mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"
+    modCompileOnly "dev.emi:emi-forge:${emi_version}:api"
 
     if (dev_recipe_viewer == 'jei') {
-        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+        modLocalRuntime "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     } else if (dev_recipe_viewer == 'emi') {
-        localRuntime "dev.emi:emi-neoforge:${emi_version}"
+        modLocalRuntime "dev.emi:emi-forge:${emi_version}"
     }
-    localRuntime "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+    modLocalRuntime "top.theillusivec4.curios:curios-forge:${curios_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
             minecraft_version_range: minecraft_version_range,
-            neo_version            : neo_version,
+            forge_version_range    : forge_version_range,
             loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,
-            mod_authors            : mod_authors,
             mod_version            : mod_version,
+            mod_authors            : mod_authors,
             projecte_version_range : projecte_version_range,
     ]
     inputs.properties replaceProperties
@@ -108,7 +116,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     into "build/generated/sources/modMetadata"
 }
 sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

@@ -2,7 +2,8 @@ package com.transtableoverhaul.integration.jei;
 
 import com.transtableoverhaul.TransTableOverhaul;
 import com.transtableoverhaul.crafting.TransmutationCraftingMenu;
-import com.transtableoverhaul.network.FillCraftingGridPayload;
+import com.transtableoverhaul.network.FillCraftingGridMessage;
+import com.transtableoverhaul.network.ModNetwork;
 import com.transtableoverhaul.registry.ModRegistries;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +21,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
  * JEI's "+" button for the crafting terminal. Ingredients can come from learned items (EMC) or the player's inventory,
  * so JEI's slot based transfer can't be used; the server picks and pulls the items in {@link TransmutationCraftingMenu#fillGrid}.
  */
-public class CraftingTransferHandler implements IRecipeTransferHandler<TransmutationCraftingMenu, RecipeHolder<CraftingRecipe>> {
+public class CraftingTransferHandler implements IRecipeTransferHandler<TransmutationCraftingMenu, CraftingRecipe> {
 
     private final IRecipeTransferHandlerHelper helper;
 
@@ -51,13 +50,13 @@ public class CraftingTransferHandler implements IRecipeTransferHandler<Transmuta
 
     @NotNull
     @Override
-    public RecipeType<RecipeHolder<CraftingRecipe>> getRecipeType() {
+    public RecipeType<CraftingRecipe> getRecipeType() {
         return RecipeTypes.CRAFTING;
     }
 
     @Nullable
     @Override
-    public IRecipeTransferError transferRecipe(@NotNull TransmutationCraftingMenu menu, @NotNull RecipeHolder<CraftingRecipe> recipe,
+    public IRecipeTransferError transferRecipe(@NotNull TransmutationCraftingMenu menu, @NotNull CraftingRecipe recipe,
             @NotNull IRecipeSlotsView recipeSlots, @NotNull Player player, boolean maxTransfer, boolean doTransfer) {
         List<IRecipeSlotView> inputs = recipeSlots.getSlotViews(RecipeIngredientRole.INPUT);
         if (inputs.size() > TransmutationCraftingMenu.GRID_SIZE) {
@@ -76,7 +75,7 @@ public class CraftingTransferHandler implements IRecipeTransferHandler<Transmuta
             return helper.createUserErrorForMissingSlots(Component.translatable("gui." + TransTableOverhaul.MODID + ".crafting.missing"), missing);
         }
         if (doTransfer) {
-            PacketDistributor.sendToServer(new FillCraftingGridPayload(menu.containerId, grid, maxTransfer));
+            ModNetwork.sendToServer(new FillCraftingGridMessage(menu.containerId, grid, maxTransfer));
         }
         return null;
     }
@@ -88,8 +87,8 @@ public class CraftingTransferHandler implements IRecipeTransferHandler<Transmuta
         List<ItemStack> alternatives = new ArrayList<>();
         view.getDisplayedItemStack().ifPresent(alternatives::add);
         view.getItemStacks().forEach(stack -> {
-            if (alternatives.size() < FillCraftingGridPayload.MAX_ALTERNATIVES && !stack.isEmpty()
-                    && alternatives.stream().noneMatch(existing -> ItemStack.isSameItemSameComponents(existing, stack))) {
+            if (alternatives.size() < FillCraftingGridMessage.MAX_ALTERNATIVES && !stack.isEmpty()
+                    && alternatives.stream().noneMatch(existing -> ItemStack.isSameItemSameTags(existing, stack))) {
                 alternatives.add(stack);
             }
         });

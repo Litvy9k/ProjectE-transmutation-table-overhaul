@@ -21,6 +21,7 @@
   "gui.transtable_overhaul.search": "搜索",
   "gui.transtable_overhaul.search.hint": "搜索...",
   "gui.transtable_overhaul.emc": "EMC",
+  "gui.transtable_overhaul.emc.exact": "EMC：%s",
   "gui.transtable_overhaul.learned": "已学习新物品！",
   "gui.transtable_overhaul.unlearned": "已遗忘物品",
   "gui.transtable_overhaul.tooltip.affordable": "可转化：%s",
