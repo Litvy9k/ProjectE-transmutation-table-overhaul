@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Crafting table, EMC mode: clicking a crafting slot with a held item that has an EMC value makes it an EMC placeholder
+  instead of putting the item in, and the item stays on the cursor (click or drag over several slots). Items that
+  aren't learned yet are learned first.
+
 ## 1.1.2 - Minecraft 1.21.1 (NeoForge)
 
 - New item: **Portable Transmutation Crafting Table** (Transmutation Tablet on top of Dark Matter). Right-click to open
