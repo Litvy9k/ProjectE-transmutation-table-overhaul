@@ -4,7 +4,9 @@ import com.transtableoverhaul.client.ClientConfig;
 import com.transtableoverhaul.crafting.TransmutationCraftingMenu;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import moze_intel.projecte.utils.TransmutationEMCFormatter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -47,6 +50,11 @@ public class TransmutationCraftingScreen extends TransmutationTerminalScreen {
     private boolean sentSourcePreference;
     private TerminalButton recipeButton;
     private boolean recipePopupOpen;
+
+    /** EMC mode: holding an item and sweeping over crafting slots makes each a placeholder of it. */
+    private boolean placeholderDragging;
+    private int placeholderDragButton;
+    private final Set<Integer> placeholderDragSlots = new HashSet<>();
 
     // Recipe lookups are too slow for every frame, only redo them when the grid changes
     private final ItemStack[] recipeCacheKey = new ItemStack[TransmutationCraftingMenu.GRID_SIZE];
@@ -299,7 +307,57 @@ public class TransmutationCraftingScreen extends TransmutationTerminalScreen {
                 recipePopupOpen = false;
             }
         }
+        Slot slot = craftingSlotAt(mouseX, mouseY);
+        if (slot != null && (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT)
+                && !craftingMenu.isPreferInventory() && craftingMenu.canBecomePlaceholder(menu.getCarried())) {
+            placeholderDragging = true;
+            placeholderDragButton = button;
+            placeholderDragSlots.clear();
+            placePlaceholder(slot);
+            return true;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (placeholderDragging) {
+            Slot slot = craftingSlotAt(mouseX, mouseY);
+            if (slot != null) {
+                placePlaceholder(slot);
+            }
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (placeholderDragging) {
+            placeholderDragging = false;
+            placeholderDragSlots.clear();
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Nullable
+    private Slot craftingSlotAt(double mouseX, double mouseY) {
+        for (Slot slot : gridSlots) {
+            if (isHovering(slot.x, slot.y, 16, 16, mouseX, mouseY)) {
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The menu turns a click with a held item into a placeholder in EMC mode (and keeps the item on the cursor).
+     */
+    private void placePlaceholder(Slot slot) {
+        if (placeholderDragSlots.add(slot.getContainerSlot())) {
+            slotClicked(slot, slot.index, placeholderDragButton, ClickType.PICKUP);
+        }
     }
 
     @Override

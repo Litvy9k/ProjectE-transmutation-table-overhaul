@@ -36,7 +36,8 @@ import org.jetbrains.annotations.Nullable;
  * does (grid extraction, learning, Klein stars) keeps working because this is still a {@link TransmutationContainer}.
  * <p>
  * Each grid slot either holds real items (from the player's inventory) or is an EMC placeholder: a single learned item
- * that is never used up, instead every craft pays its EMC value. Real items that run out are refilled from the
+ * that is never used up, instead every craft pays its EMC value. In EMC mode, clicking a crafting slot with a held item
+ * makes a placeholder of it and keeps the item on the cursor. Real items that run out are refilled from the
  * inventory when that is the preferred source, otherwise they turn into a placeholder if the item is learned. Switching
  * the preferred source converts the grid right away. Taking a result that has an EMC value also teaches it to the player.
  */
@@ -382,11 +383,53 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
             quickCraftStack(player);
             return;
         }
+        if (slotId >= gridStart && slotId < gridStart + GRID_SIZE && clickType == ClickType.PICKUP && !preferInventory
+                && canBecomePlaceholder(getCarried())) {
+            placeCarriedAsPlaceholder(player, slotId - gridStart);
+            return;
+        }
         if (slotId >= gridStart && slotId < gridStart + GRID_SIZE && isPlaceholder(slotId - gridStart)) {
             clickPlaceholder(slotId - gridStart, button, clickType);
             return;
         }
         super.clicked(slotId, button, clickType, player);
+    }
+
+    /**
+     * EMC mode: whether clicking a crafting slot while holding {@code stack} makes an EMC placeholder of it instead of
+     * putting the item in. Needs an EMC value, and no extra data (enchantments, damage) that EMC can't recreate.
+     */
+    public boolean canBecomePlaceholder(ItemStack stack) {
+        return !stack.isEmpty() && IEMCProxy.INSTANCE.hasValue(stack)
+                && ItemStack.isSameItemSameTags(CraftingSources.placeholder(stack), stack);
+    }
+
+    /**
+     * Turns grid slot {@code index} into a placeholder of the held item, which stays on the cursor. Not yet learned items
+     * are learned first; real items in the slot go back to the inventory.
+     */
+    private void placeCarriedAsPlaceholder(Player player, int index) {
+        ItemStack carried = getCarried();
+        if (!player.level().isClientSide && CraftingSources.learnedValue(transmutationInventory, carried) <= 0) {
+            transmutationInventory.handleKnowledge(carried);
+            if (CraftingSources.learnedValue(transmutationInventory, carried) <= 0) {
+                // Learning was blocked (PlayerAttemptLearnEvent)
+                return;
+            }
+        }
+        ItemStack placeholder = CraftingSources.placeholder(carried);
+        if (isPlaceholder(index) && ItemStack.isSameItemSameTags(craftSlots.getItem(index), placeholder)) {
+            return;
+        }
+        suppressUpdates = true;
+        try {
+            clearSlot(player, index);
+            setPlaceholder(index, true);
+            craftSlots.setItem(index, placeholder);
+        } finally {
+            suppressUpdates = false;
+            updateResult();
+        }
     }
 
     /**
@@ -488,6 +531,10 @@ public class TransmutationCraftingMenu extends TransmutationContainer {
 
     @Override
     public boolean canDragTo(@NotNull Slot slot) {
+        if (slot.container == craftSlots && !preferInventory && canBecomePlaceholder(getCarried())) {
+            // EMC mode: the screen turns drags over the grid into placeholders, don't spread real items there
+            return false;
+        }
         return !isPlaceholderSlot(slot) && super.canDragTo(slot);
     }
 

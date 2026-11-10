@@ -26,6 +26,7 @@ Craft it from a Transmutation Table on top of a piece of Dark Matter. It works l
 
 - **JEI "+" transfer**: learned ingredients go into the grid as **EMC placeholders** that are paid for with EMC on every craft; anything else comes from your inventory (Shift + "+" fills a whole stack).
 - Every filled grid slot shows a small gem (EMC) or chest (inventory) marker. Inventory items that run out turn into an EMC placeholder if you have learned them, so you can keep crafting, just like an AE2 crafting terminal.
+- In EMC mode, clicking a crafting slot with a held item (from your inventory or the terminal) turns the slot into an EMC placeholder of it and **keeps the item on your cursor**, so you can click or drag over several slots. Items you haven't learned yet are learned on the spot.
 - **⇄ button**: switch between EMC and your inventory. The grid converts right away: placeholders are swapped for items from your inventory, or inventory items go back and become placeholders. **✕ button**: clear the grid.
 - When the grid forms a recipe, the EMC paid per craft is shown next to the result (red if you can't afford it).
 - Click the result to take it, shift-click to craft one stack. **Taking a crafted item that has an EMC value also learns it**, so it shows up in the terminal right away.
@@ -61,6 +62,7 @@ Install it on **both the client and the server**. Every transmutation is checked
 - 新方块**合成转化桌**（转化桌放在暗物质上合成）：
   - 带 3×3 合成格，支持 JEI 的"+"转移按钮。已学习的材料作为 EMC 占位放入，每次合成扣除 EMC；其余从背包取。⇄ 按钮切换来源，合成格里的材料会立即在 EMC 占位和背包实物之间转换。
   - 每个有物品的格子都显示宝石（EMC）或箱子（背包）标记。背包材料用完后，如果已学习，会留下 EMC 占位继续合成，和 AE2 合成终端一样。
+  - EMC 模式下，拿着物品点击合成格会把该格变成这个物品的 EMC 占位，物品仍留在鼠标上，可以连续点击或拖过多个格子；还没学习的物品会先自动学习。
   - 能组成配方时，合成格旁边显示每次合成消耗的 EMC（不够时显示为红色）。
   - 点击取出产物，Shift + 点击合成一组；取出有 EMC 值的产物时会同时学习它。
   - 有多个配方匹配时，结果槽旁边会出现切换配方按钮。
