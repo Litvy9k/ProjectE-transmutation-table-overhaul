@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.3 for Minecraft 1.20.1 (Forge)
 
 - Crafting table, EMC mode: clicking a crafting slot with a held item that has an EMC value makes it an EMC placeholder
   instead of putting the item in, and the item stays on the cursor (click or drag over several slots). Items that
